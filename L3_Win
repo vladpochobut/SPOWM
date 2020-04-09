@@ -46,9 +46,9 @@ void Server(char* path)
 	string message;
 
 
-	Semaphores[0] = CreateSemaphore(NULL, 0 , 1, "SEMAPHORE_lab3");      // Семафор, уведомляющий о разрешении печати
-	Semaphores[1] = CreateSemaphore(NULL, 0 , 1, "SEMAPHORE_end_lab3");      // Семафор, уведомляющий о разрешении печати
-	Semaphores[2] = CreateSemaphore(NULL, 0 , 1, "SEMAPHORE_EXIT_lab3");	// Семафор, уведомляющий о завершении работы			
+	Semaphores[0] = CreateSemaphore(NULL, 0 , 1, "SEMAPHORE_lab3");     
+	Semaphores[1] = CreateSemaphore(NULL, 0 , 1, "SEMAPHORE_end_lab3");     
+	Semaphores[2] = CreateSemaphore(NULL, 0 , 1, "SEMAPHORE_EXIT_lab3");				
 
 	cout<<"Server process\n\n";
 
@@ -70,15 +70,15 @@ void Server(char* path)
 
 		if(message == "quit")
 		{
-			ReleaseSemaphore(Semaphores[2], 1, NULL);  // Сообщаем дочернему процессу о завершении работы
+			ReleaseSemaphore(Semaphores[2], 1, NULL); 
 			WaitForSingleObject(childProcessInfo.hProcess, INFINITE);
 			break;
 		}
 
-		ReleaseSemaphore(Semaphores[0], 1, NULL);   // Сообщаем дочернему процессу о готовности начала передачи данных
+		ReleaseSemaphore(Semaphores[0], 1, NULL);  
 
 		cout << "w1\n";
-		int NumberOfBlocks = message.size() / bufferSize + 1;	// Количество блоков размером с буфер			
+		int NumberOfBlocks = message.size() / bufferSize + 1;			
 		WriteFile(hMyPipe, &NumberOfBlocks, sizeof(NumberOfBlocks), &NumberOfBytesWritten, (LPOVERLAPPED)NULL);
 
 		cout << "w2\n";
@@ -92,7 +92,7 @@ void Server(char* path)
 			if(!WriteFile(hMyPipe, buffer, bufferSize, &NumberOfBytesWritten,(LPOVERLAPPED)NULL)) cout<<"Write Error\n";
 		}				
 
-		WaitForSingleObject(Semaphores[1], INFINITE); // Ожидание, пока клиентский процесс не напечатал строку
+		WaitForSingleObject(Semaphores[1], INFINITE); 
 	}			
 
 	CloseHandle(hMyPipe);
@@ -129,7 +129,7 @@ void Client()
 		DWORD NumberOfBytesRead;
 		message.clear();
 
-		int index = WaitForMultipleObjects(3, Semaphores, FALSE, INFINITE) - WAIT_OBJECT_0; // Получил уведомление о возможности чтения, семафор занят
+		int index = WaitForMultipleObjects(3, Semaphores, FALSE, INFINITE) - WAIT_OBJECT_0; 
 		if (index == 2) // Если сигнальный семафор выхода
 			break;					
 
