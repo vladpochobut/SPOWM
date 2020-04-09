@@ -30,7 +30,7 @@ void ReleaseSemaphore(int sem_id, int num);
 int main(int argc, char *argv[])
 {  
 	int bufferSize = 20; // Размер буфера
-	int shm_id = shmget(IPC_PRIVATE, bufferSize, IPC_CREAT|0666); // Создание сегмента разделяемой памяти
+	int shm_id = shmget(IPC_PRIVATE, bufferSize, IPC_CREAT|0666); 
 
 	if (shm_id < 0) 
 	{
@@ -38,15 +38,15 @@ int main(int argc, char *argv[])
 		return(0);
 	} 
 
-	int NumberOfBlocks; // Количество блоков размером с буфер
-	int length;	      // Длина передаваемой строки
+	int NumberOfBlocks; 
+	int length;	     
 
 	system("clear");
 	string message;
 
 	// Создание набора семафоров
-	int sem_id = semget(IPC_PRIVATE, 4, IPC_CREAT|0666);//создаёт набор семафоров
-	semctl(sem_id, 0, SETALL, 0);//устанавливают значения семафоров на 0
+	int sem_id = semget(IPC_PRIVATE, 4, IPC_CREAT|0666);
+	semctl(sem_id, 0, SETALL, 0);
 	if(sem_id < 0)
 	{
 		printf("Semaphores is not created.");
@@ -60,26 +60,25 @@ int main(int argc, char *argv[])
 		printf("New process is not created\n");
 		return 0;
 		
-	case 0: // Дочерний процесс
+	case 0:
 		{
 			void *buffer = shmat(shm_id, NULL, 0);
 			while(1)
 			{
 				message.clear();
-				WaitSemaphore(sem_id, 2); // Ожидание, пока счётчик семафора не станет равным 1
-				// и сброс в 0 по окончании ожидания
+				WaitSemaphore(sem_id, 2); 
 				
 				WaitSemaphore(sem_id, 0);
 				length = *(int*)buffer;	
 				ReleaseSemaphore(sem_id, 1);	
 				
-				if(length == -1) break;  // Выход из программы
+				if(length == -1) break;  
 				
-				NumberOfBlocks = ceil((double)length / (double)bufferSize); // Количество блоков размером с буфер
+				NumberOfBlocks = ceil((double)length / (double)bufferSize);
 				for( int i=0; i < NumberOfBlocks; i++)
 				{
 					WaitSemaphore(sem_id, 0);					
-					message.append((char*)buffer, bufferSize); // Добавляем полученный буфер в строку
+					message.append((char*)buffer, bufferSize); 
 					ReleaseSemaphore(sem_id, 1);
 				}
 				
@@ -103,17 +102,17 @@ int main(int argc, char *argv[])
 		
 	default: // Родительский процесс
 		{
-			void *buffer = shmat(shm_id, NULL, 0);//подстыковывает сегмент разделяемой памяти к адресному пространству вызывающего процесса
+			void *buffer = shmat(shm_id, NULL, 0);
 			while(1)
 			{
 				message.clear();
 				cout<<"Parent process:\n";
-				system("stty echo"); //включает в терминале набор данных
+				system("stty echo");
 				tcflush(STDIN_FILENO, TCIFLUSH);
 				getline(cin, message);
-				system("stty -echo");//выключает
+				system("stty -echo");
 				
-				ReleaseSemaphore(sem_id, 2);	// уведомление о готовности
+				ReleaseSemaphore(sem_id, 2);	
 				
 				if(message == "quit")
 				{
@@ -128,20 +127,17 @@ int main(int argc, char *argv[])
 				length = message.size();
 				*(int*)buffer = length;
 				
-				ReleaseSemaphore(sem_id, 0);	// сообщаем о передаче сообщения
-				WaitSemaphore(sem_id, 1);    // Ожидаем получения сообщения
-				
-				NumberOfBlocks = ceil((double)length / (double)bufferSize); // Количество блоков размером с буфер
+				ReleaseSemaphore(sem_id, 0);	
+				WaitSemaphore(sem_id, 1);    
+				NumberOfBlocks = ceil((double)length / (double)bufferSize); 
 				for(int i = 0; i < NumberOfBlocks; i++)
 				{					
 					message.copy((char*)buffer, bufferSize, i*bufferSize);	// Заполняем буфер
 					
-					ReleaseSemaphore(sem_id, 0);	// сообщаем о передаче сообщения
-					WaitSemaphore(sem_id, 1);    // Ожидаем получения сообщения
-				}	
+					ReleaseSemaphore(sem_id, 0);	
+					WaitSemaphore(sem_id, 1);   
 				
-				WaitSemaphore(sem_id, 3);  // Ожидание, пока счётчик семафора не станет равным 1
-				// и сброс в 0 по окончании ожидания
+				WaitSemaphore(sem_id, 3); 
 			}
 			
 			semctl(sem_id, 0, IPC_RMID, semunion); // Удаляем набор семафоров
